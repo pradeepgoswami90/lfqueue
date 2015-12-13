@@ -1,3 +1,29 @@
+/*
+Copyright (c) 2015, Mike Taghavi (mitghi) <mitghi@me.com>
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice, this
+  list of conditions and the following disclaimer.
+
+* Redistributions in binary form must reproduce the above copyright notice,
+  this list of conditions and the following disclaimer in the documentation
+  and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+*/
+
 #ifndef LFQ
 # include "lfq.h"
 #endif
@@ -29,9 +55,9 @@ qpush(queue_t *queue,int value)
 	 pointer_t *next;
 
 	node_t *node = (node_t *) malloc(sizeof(node_t));
-	if( node == NULL ) { printf("\n MALLOC FAILED \n"); }
+	if( node == NULL ) { printf("\n MALLOC FAILED \n"); exit(1); }
 	pointer_t * nodeptr = (pointer_t *) malloc(sizeof(pointer_t));
-	if( nodeptr == NULL ) { printf("\n MALLOC FAILED \n"); }
+	if( nodeptr == NULL ) { printf("\n MALLOC FAILED \n"); exit(1); }
 
 	node->value = value;
 	node->next = NULL;
@@ -52,8 +78,8 @@ qpush(queue_t *queue,int value)
 					break;
 				}
 			} else {
-				PR(printf("\ninside this\n"));
-				printf("\n wrote suc %d\n",__sync_fetch_and_add(&(next->count),1));
+				PR(printf("\ninside this\n")); // got it ?
+				printf("\n wrote %d\n",__sync_fetch_and_add(&(next->count),1));
 				__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,next->nptr);
 			}
 		}
@@ -83,7 +109,7 @@ void qpop(queue_t *queue,int thrd){
 				if (_next == NULL) return;
 				__sync_fetch_and_add(&(_next->count),1);
 				__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,_next);
-				printf("\n here \n");
+				printf("\n here \n"); // seriously
 				return;
 			} else{
 				val = _next->nptr->value;
