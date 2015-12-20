@@ -128,7 +128,7 @@ qpop(queue_t *queue,int thrd){
   if (val != NULL){
     if (tmp != NULL) __sync_fetch_and_add(&(tmp->count),1);
     free(_next->nptr)
-      free(_next);
+    free(_next);
     
     return val;
   }
