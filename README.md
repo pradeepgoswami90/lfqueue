@@ -18,15 +18,9 @@ Simple Lock-Free Queue implemented in C based on [this paper](https://www.resear
     
       for(;;) {    
         value = qpop(queue,(unsigned int)pthread_self());
-        
         if(value != NULL && value->data != NULL){
-          
-          if (value->type == CHAR_TYPE) {
-    	printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
-          }
-          
+          if (value->type == CHAR_TYPE) printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
         }
-    
         sched_yield();
         value = NULL;
         CHECK_COND(cond);
