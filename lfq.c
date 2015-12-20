@@ -57,10 +57,8 @@ qpush(queue_t *queue,void *value) {
   pointer_t *next;
 
   node_t *node = (node_t *) malloc(sizeof(node_t)) MPANIC(node);
-//  if( node == NULL ) { printf("\n MALLOC FAILED \n"); exit(1); }
 
   pointer_t * nodeptr = (pointer_t *) malloc(sizeof(pointer_t)) MPANIC(nodeptr);
-//  if( nodeptr == NULL ) { printf("\n MALLOC FAILED \n"); exit(1); }
 
   node->value = value;
   node->next = NULL;
@@ -88,7 +86,6 @@ qpush(queue_t *queue,void *value) {
       }
     }
  }
-
 }
 
 value_t *
@@ -113,15 +110,11 @@ qpop(queue_t *queue,int thrd){
     if (_next == NULL) return NULL;
 
     if (head == queue->head){
-
-  	  if (head->nptr == tail->nptr){
-				if (_next == NULL) return NULL;
-
+      if (head->nptr == tail->nptr){
+	if (_next == NULL) return NULL;
 	__sync_fetch_and_add(&(_next->count),1);
-	if (!__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,_next)) continue;
-
+	if (!__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,_next)) continue;	
       } else {
-
 	val = _next->nptr->value;
 	__sync_fetch_and_add(&(_next->count),1);
 	if (__sync_bool_compare_and_swap(&(queue->head->nptr->next),(long long unsigned int)tmp,_next->nptr->next)) {
@@ -133,18 +126,12 @@ qpop(queue_t *queue,int thrd){
   }
 
   if (val != NULL){
-    //    if (tmp != NULL){
-    //      __sync_fetch_and_add(&(tmp->count),1);
-    //      if (__sync_bool_compare_and_swap(&tmp->count,tmp->count,tmp->count)){
-    //        _next->nptr->value = ;
-        free(_next->nptr);		
-        free(_next);
-
+    if (tmp != NULL) __sync_fetch_and_add(&(tmp->count),1);
+    free(_next->nptr)
+      free(_next);
+    
     return val;
-	//      }
-	//    }    
   }
-
-  return NULL;
   
+  return NULL;
 }

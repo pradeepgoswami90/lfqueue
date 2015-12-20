@@ -37,20 +37,20 @@ void *consumer(void *_queue){
   int i=100;
   value_t *value = NULL;
 
-  for(;;) {
-    
+  for(;;) {    
     value = qpop(queue,(unsigned int)pthread_self());
     
     if(value != NULL && value->data != NULL){
+      
       if (value->type == CHAR_TYPE) {
 	printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
       }
+      
     }
 
     sched_yield();
     value = NULL;
     CHECK_COND(cond);
-
   }
 }
 
@@ -69,17 +69,15 @@ int main(){
   
   for(i = 0; i < 100; i++){
     value[i].type = CHAR_TYPE;
-    value[i].data = (char *) malloc(6* sizeof(char *));
+    value[i].data = (char *) malloc(8* sizeof(char *));
     sprintf(value[i].data,"test %d.",i);
     qpush(queue,&value[i]);
   }
   
   sleep(1);
 
-  int j=0;
-  
-  for (j=1; j < 90; j++){
-    value_t *t = &value[j];
+  for (i=1; i < 90; i++){
+    value_t *t = &value[i];
     free(t->data);
   }
 
