@@ -24,16 +24,35 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef LFQ
-# include "lfq.h"
-#endif
+#include <stdio.h>
+#include <stdlib.h>
 
-queue_t *
+#include "lfq.h"
+
+#define MPANIC(x) ;if(x == NULL) { perror("Malloc filed."); exit(1);}
+#define RETDISCARD /* VALUE IS DISCARDED */
+
+struct _node{
+  Value *value;
+  Pointer *next;
+};
+
+struct _pointer{
+  int count;
+  Node *nptr;
+};
+
+struct _queue{
+  Pointer *head;
+  Pointer *tail;
+};
+
+Queue *
 q_initialize() {
 
-  queue_t *queue = (queue_t *) malloc(sizeof(queue_t)) MPANIC(queue);
-  node_t *node = (node_t *) malloc(sizeof(node_t)) MPANIC(node);
-  pointer_t *nodeptr = (pointer_t *) malloc(sizeof(pointer_t)) MPANIC(nodeptr);
+  Queue *queue = (Queue *) malloc(sizeof(Queue)) MPANIC(queue);
+  Node *node = (Node *) malloc(sizeof(Node)) MPANIC(node);
+  Pointer *nodeptr = (Pointer *) malloc(sizeof(Pointer)) MPANIC(nodeptr);
 
   node->next = NULL;
   node->value = NULL;
@@ -46,19 +65,20 @@ q_initialize() {
  *        |->  |nptr|-->|node|->[ptr]NULL
  * tail ..'    `----'   `----'
  ***************************************/
+	__sync_synchronize();
   return queue;
 }
 
 void
-qpush(queue_t *queue,void *value) {
+qpush(Queue *queue,void *value) {
 
-  pointer_t *head;
-  pointer_t *tail;
-  pointer_t *next;
+  Pointer *head;
+  Pointer *tail;
+  Pointer *next;
 
-  node_t *node = (node_t *) malloc(sizeof(node_t)) MPANIC(node);
+  Node *node = (Node *) malloc(sizeof(Node)) MPANIC(node);
 
-  pointer_t * nodeptr = (pointer_t *) malloc(sizeof(pointer_t)) MPANIC(nodeptr);
+  Pointer * nodeptr = (Pointer *) malloc(sizeof(Pointer)) MPANIC(nodeptr);
 
   node->value = value;
   node->next = NULL;
@@ -68,6 +88,7 @@ qpush(queue_t *queue,void *value) {
   while(1){
     head = queue->head;
     tail = queue->tail;
+    //FIX THIS
     next = tail->nptr->next;
 
     if (tail == queue->tail) {
@@ -75,12 +96,12 @@ qpush(queue_t *queue,void *value) {
 	__sync_fetch_and_add(&(nodeptr->count),1);
 	if (__sync_bool_compare_and_swap(&(tail->nptr->next),(long long unsigned int)next,nodeptr)){
 	  if (__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,nodeptr)){
-	    printf("\n did this \n");
 	    break;
 	  }
 	}
       } else {
-	printf("\n wrote %d\n",__sync_fetch_and_add(&(next->count),1));
+	//FIX THIS
+	__sync_fetch_and_add(&(next->count),1);
 	if (__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,next->nptr)){
 	}
       }
@@ -88,14 +109,14 @@ qpush(queue_t *queue,void *value) {
  }
 }
 
-value_t *
-qpop(queue_t *queue,int thrd){
+Value *
+qpop(Queue *queue,int thrd){
 
-  pointer_t *head = NULL;
-  pointer_t *tail = NULL;
-  pointer_t *_next = NULL;
-  pointer_t *tmp = NULL;
-  value_t *val = NULL;
+  Pointer *head = NULL;
+  Pointer *tail = NULL;
+  Pointer *_next = NULL;
+  Pointer *tmp = NULL;
+  Value *val = NULL;
 
   while (1){
     head = queue->head;
@@ -103,7 +124,7 @@ qpop(queue_t *queue,int thrd){
 
     if(head == tail) return NULL;
 
-    tmp = (pointer_t *)queue->head->nptr->next;
+    tmp = (Pointer *)queue->head->nptr->next;
     _next = queue->head->nptr->next;
     int count = head->count;
 
@@ -112,10 +133,12 @@ qpop(queue_t *queue,int thrd){
     if (head == queue->head){
       if (head->nptr == tail->nptr){
 	if (_next == NULL) return NULL;
+	//FIX THIS
 	__sync_fetch_and_add(&(_next->count),1);
-	if (!__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,_next)) continue;	
+	if (!__sync_bool_compare_and_swap(&(queue->tail),(long long unsigned int)tail,_next)) continue;
       } else {
 	val = _next->nptr->value;
+	//FIX THIS
 	__sync_fetch_and_add(&(_next->count),1);
 	if (__sync_bool_compare_and_swap(&(queue->head->nptr->next),(long long unsigned int)tmp,_next->nptr->next)) {
 	  __sync_synchronize();
@@ -126,12 +149,26 @@ qpop(queue_t *queue,int thrd){
   }
 
   if (val != NULL){
+    //FIX THIS
     if (tmp != NULL) __sync_fetch_and_add(&(tmp->count),1);
-    free(_next->nptr)
+    //FIX THIS
+    free(_next->nptr);
     free(_next);
-    
+
     return val;
   }
-  
+
   return NULL;
+}
+
+void
+queue_free(Queue *queue){
+  if (queue->head == queue->tail){
+    free(queue->head);
+    free(queue);
+  } else if(queue->head != NULL && queue->tail != NULL){
+    free(queue->head);
+    free(queue->tail);
+    free(queue);
+  }
 }

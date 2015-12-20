@@ -24,56 +24,30 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <signal.h>
-#include <unistd.h>
-#include <time.h>
-
 #ifndef LFQ
 #define LFQ
 #endif
 
-#define MPANIC(x) ;if(x == NULL) { perror("Malloc failed."); printf("[FILE %s] Malloc failed at line %d in function%s.",__FILE__,__LINE__,__FUNCTION__); exit(1);}
-
-#define RETDISCARD /* VALUE IS DISCARDED */
 #define CHECK_COND(cond) if (__sync_bool_compare_and_swap(&cond,1,1)) break;
 
-#define PR(a) a;
+typedef struct _node Node;
+typedef struct _pointer Pointer;
+typedef struct _queue Queue;
+typedef struct _value Value;
 
-typedef struct _node_t node_t;
-typedef struct _pointer_t pointer_t;
-typedef struct _queue_t queue_t;
-typedef struct _value_t value_t;
-
-struct _node_t{
-	 value_t *value;
-	 pointer_t *next;
+struct _value{
+   unsigned int type;
+   void *data;
 };
 
-struct _pointer_t{
-	 int count;
-	 node_t *nptr;
-};
-
-struct _queue_t{
-	 pointer_t *head;
-	 pointer_t *tail;
-};
-
-struct _value_t{
-        unsigned int type;
-        void *data;
-};
-
-queue_t *
+Queue *
 q_initialize(void);
 
+void
+qpush(Queue *, void *);
+
+Value *
+qpop(Queue *,int);
 
 void
-qpush(queue_t *, void *);
-
-value_t *
-qpop(queue_t *,int);
-
-
+queue_free(Queue *);
