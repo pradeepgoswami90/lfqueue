@@ -34,18 +34,21 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LFQ
 #endif
 
+#define MPANIC(x) ;if(x == NULL) { perror("Malloc failed."); printf("[FILE %s] Malloc failed at line %d in function%s.",__FILE__,__LINE__,__FUNCTION__); exit(1);}
+
 #define RETDISCARD /* VALUE IS DISCARDED */
+#define CHECK_COND(cond) if (__sync_bool_compare_and_swap(&cond,1,1)) break;
 
 #define PR(a) a;
 
 typedef struct _node_t node_t;
 typedef struct _pointer_t pointer_t;
 typedef struct _queue_t queue_t;
+typedef struct _value_t value_t;
 
 struct _node_t{
-	 unsigned int value;
+	 value_t *value;
 	 pointer_t *next;
-
 };
 
 struct _pointer_t{
@@ -58,14 +61,19 @@ struct _queue_t{
 	 pointer_t *tail;
 };
 
+struct _value_t{
+        unsigned int type;
+        void *data;
+};
+
 queue_t *
 q_initialize(void);
 
 
 void
-qpush(queue_t *, int);
+qpush(queue_t *, void *);
 
-void
+value_t *
 qpop(queue_t *,int);
 
 

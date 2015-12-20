@@ -27,39 +27,71 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "lfq.h"
 #include <pthread.h>
 
+#define CHAR_TYPE 0
+
 volatile int cond = 0;
 
 void *consumer(void *_queue){
-    queue_t *queue = (queue_t *)_queue;
-    int i=100;
-    for(;;) {
-           qpop(queue,(int)pthread_self());
-           sched_yield();
-           __sync_synchronize();
-           if (__sync_bool_compare_and_swap(&cond,1,1)){
-            printf("\nquiting\n");
-           	break;
-          }
-	}
+  queue_t *queue = (queue_t *)_queue;
+
+  int i=100;
+  value_t *value = NULL;
+
+  for(;;) {
+    
+    value = qpop(queue,(unsigned int)pthread_self());
+    
+    if(value != NULL && value->data != NULL){
+      if (value->type == CHAR_TYPE) {
+	printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
+      }
+    }
+
+    sched_yield();
+    value = NULL;
+    CHECK_COND(cond);
+
+  }
 }
 
 int main(){
+  int i = 0;
+  
+  queue_t *queue = q_initialize();
+  
+  pthread_t _thread;
+  pthread_t _thread2;	
 
-	pthread_t _thread;
-	pthread_t _thread2;
-	queue_t *queue = q_initialize();
-	pthread_create(&_thread,NULL,consumer,queue);
-	pthread_create(&_thread2,NULL,consumer,queue);
+  pthread_create(&_thread,NULL,consumer,queue);
+  pthread_create(&_thread2,NULL,consumer,queue);
+ 
+  value_t *value = malloc(100 * sizeof(value_t));
+  
+  for(i = 0; i < 100; i++){
+    value[i].type = CHAR_TYPE;
+    value[i].data = (char *) malloc(6* sizeof(char *));
+    sprintf(value[i].data,"test %d.",i);
+    qpush(queue,&value[i]);
+  }
+  
+  sleep(1);
 
-	int i = 0;
+  int j=0;
+  
+  for (j=1; j < 90; j++){
+    value_t *t = &value[j];
+    free(t->data);
+  }
 
-	for(i=1500;i>0;i--) { qpush(queue,i); }
+  free(value);
+  free(queue->head);
+  free(queue->tail);
+  free(queue);
+  
+  __sync_bool_compare_and_swap(&cond,0,1);
 
-	sleep(10);
-	__sync_bool_compare_and_swap(&cond,0,1);
+  pthread_join(_thread,NULL);  
+  pthread_join(_thread2,NULL);
 
-	pthread_join(_thread,NULL);
-	pthread_join(_thread2,NULL);
-
-	return 0;
+  return 0;
 }
