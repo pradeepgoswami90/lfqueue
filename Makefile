@@ -2,8 +2,8 @@ test:
 	gcc -g test.c lfq.c -o test -lpthread
 	
 all:
-	gcc -o lfq.o -c lfq.c -lpthread -g
-	gcc -shared -o liblfq.so lfq.o -g
+	gcc -o lfq.o -c lfq.c -lpthread
+	gcc -shared -o liblfq.so lfq.o
 
 clean:
 	rm -rf test liblfq.so *.o
