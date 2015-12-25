@@ -26,6 +26,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <pthread.h>
 
 #include "lfq.h"
@@ -36,6 +37,7 @@ volatile int cond = 0;
 
 void *consumer(void *_queue){
   Queue *queue = (Queue *)_queue;
+  static pthread_mutex_t consumer_lock = PTHREAD_MUTEX_INITIALIZER;
 
   int i=100;
   Value *value = NULL;
@@ -46,7 +48,10 @@ void *consumer(void *_queue){
 
     if(value != NULL && value->data != NULL){
       if (value->type == CHAR_TYPE) {
-	printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
+        pthread_mutex_lock(&consumer_lock);
+        printf("\n %s, %u\n", (char *)value->data, (unsigned int)pthread_self());
+        fflush(stdout);
+        pthread_mutex_unlock(&consumer_lock);
       }
     }
 
