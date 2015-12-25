@@ -61,11 +61,15 @@ q_initialize() {
   queue->head = queue->tail = nodeptr;
 
  /**************************************
+ * All nodes are access through  
+ *  entry pointer.
+ *
  * head ..,    .----.   .----.
  *        |->  |nptr|-->|node|->[ptr]NULL
  * tail ..'    `----'   `----'
  ***************************************/
-	__sync_synchronize();
+
+  __sync_synchronize();
   return queue;
 }
 
