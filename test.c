@@ -41,6 +41,7 @@ void *consumer(void *_queue){
   Value *value = NULL;
 
   for(;;) {
+	  usleep(10);
     value = qpop(queue,(unsigned int)pthread_self());
 
     if(value != NULL && value->data != NULL){
@@ -77,6 +78,12 @@ int main(){
 
   sleep(1);
 
+	qpush(queue,&value[4]);
+	qpush(queue,&value[6]);
+	qpush(queue,&value[8]);
+
+	sleep(1);
+
   for (i=1; i < 90; i++){
     Value *t = &value[i];
     free(t->data);
@@ -84,7 +91,7 @@ int main(){
 
   free(value);
   queue_free(queue);
-  
+
   __sync_bool_compare_and_swap(&cond,0,1);
 
   pthread_join(_thread,NULL);
