@@ -161,7 +161,6 @@ qpop(Queue *queue,int thrd){
 	  if (__sync_bool_compare_and_swap(&(queue->head->nptr),(long long unsigned int)queue->head->nptr,_next->nptr)) {
 	    __sync_bool_compare_and_swap(&(queue->tail),queue->tail,queue->head);	    
 	    __sync_synchronize();
-
 	    break;
 	  }
 	  break;
