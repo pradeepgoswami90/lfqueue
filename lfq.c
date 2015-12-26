@@ -61,11 +61,15 @@ q_initialize() {
   queue->head = queue->tail = nodeptr;
 
  /**************************************
+ * All nodes are access through  
+ *  entry pointer.
+ *
  * head ..,    .----.   .----.
  *        |->  |nptr|-->|node|->[ptr]NULL
  * tail ..'    `----'   `----'
  ***************************************/
-	__sync_synchronize();
+
+  __sync_synchronize();
   return queue;
 }
 
@@ -124,6 +128,18 @@ qpop(Queue *queue,int thrd){
 
     if(head == tail) return NULL;
 
+    if (queue->head->count == 0) {
+      if (__sync_bool_compare_and_swap(&(queue->head->nptr),_next,_next)) return NULL;
+      
+      Node *_nptr = (Node *) malloc(sizeof(Node));
+      _nptr->next = NULL;
+      _nptr->value = NULL;
+	
+      __sync_bool_compare_and_swap(&(queue->tail->count),queue->tail->count,0);
+      while(1){ if(__sync_bool_compare_and_swap(&(queue->tail->nptr),queue->tail->nptr,_nptr)) break; }
+      while(1){ if(__sync_bool_compare_and_swap(&(queue->head),queue->head,queue->tail)) break; }
+    }
+
     tmp = (Pointer *)queue->head->nptr->next;
     _next = queue->head->nptr->next;
     int count = head->count;
@@ -139,26 +155,29 @@ qpop(Queue *queue,int thrd){
       } else {
 	val = _next->nptr->value;
 	//FIX THIS
+	__sync_synchronize();
+
+	if (_next->nptr->next == NULL) {
+	  if (__sync_bool_compare_and_swap(&(queue->head->nptr),(long long unsigned int)queue->head->nptr,_next->nptr)) {
+	    __sync_bool_compare_and_swap(&(queue->tail),queue->tail,queue->head);	    
+	    __sync_synchronize();
+	    break;
+	  }
+	  break;
+	}
 	__sync_fetch_and_add(&(_next->count),1);
 	if (__sync_bool_compare_and_swap(&(queue->head->nptr->next),(long long unsigned int)tmp,_next->nptr->next)) {
 	  __sync_synchronize();
+	  free(_next->nptr);
+	  free(_next);
 	  break;
 	}
       }
     }
   }
 
-  if (val != NULL){
-    //FIX THIS
-    if (tmp != NULL) __sync_fetch_and_add(&(tmp->count),1);
-    //FIX THIS
-    free(_next->nptr);
-    free(_next);
 
-    return val;
-  }
-
-  return NULL;
+  return val;
 }
 
 void
