@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2015, Mike Taghavi (mitghi) <mitghi@me.com>
+Copyright (c) 2015, Mike Taghavi (mitghi) <mitghi[at]me.com>
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -131,7 +131,7 @@ qpop(Queue *queue,int thrd){
     if (queue->head->count == 0) {
       if (__sync_bool_compare_and_swap(&(queue->head->nptr),_next,_next)) return NULL;
       
-      Node *_nptr = (Node *) malloc(sizeof(Node));
+      Node *_nptr = (Node *) malloc(sizeof(Node)) MPANIC(_nptr);
       _nptr->next = NULL;
       _nptr->value = NULL;
 	
@@ -158,6 +158,7 @@ qpop(Queue *queue,int thrd){
 	__sync_synchronize();
 
 	if (_next->nptr->next == NULL) {
+	  free(queue->head->nptr);
 	  if (__sync_bool_compare_and_swap(&(queue->head->nptr),(long long unsigned int)queue->head->nptr,_next->nptr)) {
 	    __sync_bool_compare_and_swap(&(queue->tail),queue->tail,queue->head);	    
 	    free(_next);
@@ -177,16 +178,15 @@ qpop(Queue *queue,int thrd){
     }
   }
 
-
   return val;
 }
 
 void
-queue_free(Queue *queue){
+queue_free(Queue *queue){  
   /*TODO:
    * Free remaining nodes if queue->head != queue->tail 
    */
-  
+
   if (queue->head == queue->tail){
     free(queue->head->nptr);
     free(queue->head);
