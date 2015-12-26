@@ -55,7 +55,7 @@ Simple Lock-Free Queue implemented in C based on [this paper](https://www.resear
     
       sleep(1);
     
-      for (i=1; i < 90; i++){
+      for (i=0; i < 100; i++){
         Value *t = &value[i];
         free(t->data);
       }
