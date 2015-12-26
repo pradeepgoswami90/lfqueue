@@ -183,10 +183,13 @@ qpop(Queue *queue,int thrd){
 void
 queue_free(Queue *queue){
   if (queue->head == queue->tail){
+    free(queue->head->nptr);
     free(queue->head);
     free(queue);
   } else if(queue->head != NULL && queue->tail != NULL){
+    free(queue->head->nptr);
     free(queue->head);
+    free(queue->tail->nptr);
     free(queue->tail);
     free(queue);
   }

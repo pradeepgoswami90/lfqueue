@@ -89,7 +89,7 @@ int main(){
 
 	sleep(1);
 
-  for (i=1; i < 90; i++){
+  for (i=0; i < 100; i++){
     Value *t = &value[i];
     free(t->data);
   }
