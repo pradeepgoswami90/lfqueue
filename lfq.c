@@ -29,7 +29,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "lfq.h"
 
-#define MPANIC(x) ;if(x == NULL) { perror("Malloc filed."); exit(1);}
+#define MPANIC(x) ;if(x == NULL) { perror("Malloc failed."); exit(1); }
 #define RETDISCARD /* VALUE IS DISCARDED */
 
 struct _node{
@@ -61,7 +61,7 @@ q_initialize() {
   queue->head = queue->tail = nodeptr;
 
  /**************************************
- * All nodes are access through  
+ * All nodes are accessed through  
  *  entry pointer.
  *
  * head ..,    .----.   .----.
@@ -160,6 +160,7 @@ qpop(Queue *queue,int thrd){
 	if (_next->nptr->next == NULL) {
 	  if (__sync_bool_compare_and_swap(&(queue->head->nptr),(long long unsigned int)queue->head->nptr,_next->nptr)) {
 	    __sync_bool_compare_and_swap(&(queue->tail),queue->tail,queue->head);	    
+	    free(_next);
 	    __sync_synchronize();
 	    break;
 	  }
@@ -182,6 +183,10 @@ qpop(Queue *queue,int thrd){
 
 void
 queue_free(Queue *queue){
+  /*TODO:
+   * Free remaining nodes if queue->head != queue->tail 
+   */
+  
   if (queue->head == queue->tail){
     free(queue->head->nptr);
     free(queue->head);
