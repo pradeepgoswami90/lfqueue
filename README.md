@@ -55,7 +55,7 @@ Simple Lock-Free Queue implemented in C based on [this paper](https://www.resear
     
       sleep(1);
     
-      for (i=1; i < 90; i++){
+      for (i=0; i < 100; i++){
         Value *t = &value[i];
         free(t->data);
       }
@@ -74,3 +74,5 @@ Simple Lock-Free Queue implemented in C based on [this paper](https://www.resear
 # TODOs
 1. Memory Pool.
 2. Hazard Pointer.
+3. Migrating to C11.
+4. [Lock Free Dynamic Memory Allocation](https://www.research.ibm.com/people/m/michael/pldi-2004.pdf)
